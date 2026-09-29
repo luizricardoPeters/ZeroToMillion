@@ -1722,50 +1722,66 @@
       tone(freq * 2.32, t, 0.07, "sine", peak * 0.2);
       noiseBurst(t, 0.010, peak * 0.7, 3400);
     }
-    // Version 24f: EIN durchgehender Zaehl-Sound statt je Ereignis ein neuer.
-    // Wird cashRun() waehrend eines laufenden Sounds erneut aufgerufen
-    // (z.B. mehrere Plinko-Baelle kurz hintereinander), startet KEIN neuer
-    // Anfangs-Wumms - der laufende Sound wird nur verlaengert. Erst wenn
-    // die Anzeige ausgezaehlt ist (Ende), kommt einmal das "Ching".
+    // Version 24i: Geld-Sound skaliert mit der Gewinnhoehe. Anzahl der
+    // "Dings" waechst logarithmisch mit dem Betrag ($5 -> 5 Dings, $50 ->
+    // ~17, $10.000 -> ~48, $1 Mio. -> ~75); je mehr, desto dichter getaktet
+    // und (leicht) ansteigend im Ton. Mehrere Gewinne kurz hintereinander
+    // fuellen nur denselben laufenden Sound auf (kein neuer Anfangs-Wumms).
+    // Wird aus animateNumber() fuer den Kontostand aufgerufen; die dortige
+    // Zaehl-Animation laeuft so lange wie der Sound (cashPlan).
+    function cashPlan(amount){
+      var a = Math.max(1, amount);
+      var n = a <= 8 ? Math.round(a) : Math.round(8 + 13 * Math.log(a / 8) / Math.LN10);
+      n = Math.max(1, Math.min(120, n));
+      var interval = Math.max(0.04, 0.12 - 0.0012 * n);
+      return { n: n, interval: interval, sec: n * interval };
+    }
     var _run = null;
     function runPump(){
       var c = ctx;
       if(!_run || !c || muted){ _run = null; return; }
       var now = c.currentTime;
-      while(_run.next < now + 0.2 && _run.next < _run.end){
-        var i = _run.n++;
-        clink(Math.max(0, _run.next - now), 2000 + sfxRand() * 950, _run.peak * (0.55 + sfxRand() * 0.35));
-        _run.next += Math.max(0.05, 0.088 - Math.min(i, 10) * 0.0035 + sfxRand() * 0.02);
+      while(_run.pending > 0 && _run.next < now + 0.25){
+        var i = _run.done++;
+        _run.pending--;
+        var rise = 1 + Math.min(0.35, _run.done * 0.004); // bei langen Serien leicht ansteigend
+        var big = _run.total > 40 ? 0.8 : 1;
+        clink(Math.max(0, _run.next - now), (1650 + sfxRand() * 800) * rise, _run.peak * big * (0.6 + sfxRand() * 0.35));
+        _run.next += _run.interval * (0.9 + sfxRand() * 0.2);
       }
-      if(now >= _run.end){
-        if(_run.ching && (_run.end - _run.start) > 0.25){
+      if(_run.pending <= 0 && now >= _run.next){
+        if(_run.total >= 6){
           var pk = _run.peak;
-          noiseBurst(0, 0.05, pk * 1.0, 2200);
-          tone(180, 0, 0.08, "triangle", pk * 1.1, 105);
-          tone(1760, 0.05, 0.65, "sine", pk * 1.1);
-          tone(2640, 0.05, 0.45, "sine", pk * 0.5);
-          tone(1175, 0.05, 0.75, "sine", pk * 0.5);
+          noiseBurst(0, 0.05, pk * 1.0, 2000);
+          tone(165, 0, 0.08, "triangle", pk * 1.1, 100);
+          tone(1568, 0.05, 0.7, "sine", pk * 1.1);     // warmes "Ching"
+          tone(2349, 0.05, 0.45, "sine", pk * 0.45);
+          tone(1047, 0.05, 0.8, "sine", pk * 0.5);
         }
         _run = null;
         return;
       }
-      setTimeout(runPump, 45);
+      setTimeout(runPump, 40);
     }
-    function cashRun(durSec, peak, ching){
+    function cashWin(amount){
+      var plan = cashPlan(amount);
       var c = ensureCtx();
-      if(!c || muted) return;
+      if(!c || muted) return plan.sec;
+      var peak = Math.min(0.2, 0.08 + 0.02 * Math.log(Math.max(1, amount)) / Math.LN10);
       var now = c.currentTime;
       if(_run){
-        _run.end = Math.max(_run.end, now + durSec);
+        _run.pending += plan.n;
+        _run.total += plan.n;
+        _run.interval = Math.min(_run.interval, plan.interval);
         _run.peak = Math.max(_run.peak, peak);
-        _run.ching = _run.ching || !!ching;
-        return;
+        return plan.sec;
       }
-      _run = { start: now, end: now + durSec, next: now + 0.03, n: 0, peak: peak, ching: !!ching };
-      tone(135, 0, 0.09, "sine", peak * 1.1, 85); // dumpfer Anfangs-Aufprall, nur einmal
+      _run = { next: now + 0.03, pending: plan.n, total: plan.n, done: 0, interval: plan.interval, peak: peak };
+      tone(130, 0, 0.09, "sine", peak * 1.1, 82); // dumpfer Anfangs-Aufprall, nur einmal
       runPump();
+      return plan.sec;
     }
-    function win(){ cashRun(1.1, 0.11, true); }
+    function win(){ /* Klang kommt jetzt aus cashWin() ueber die Kontostand-Animation */ }
     // Aufsteigende Dur-Arpeggio-Leiter, aus der plinkoWin() sich je nach
     // Stufe die ersten paar Töne "borgt" - je höher die Stufe, desto mehr
     // Töne, desto lauter, desto dichter getaktet, plus ab Stufe 5 ein
@@ -1774,18 +1790,15 @@
     // echtem Gewinn (tier 0 = knapper Push bis tier 7 = 100x-Volltreffer).
     var WIN_ARPEGGIO = [523.25, 659.25, 783.99, 1046.50, 1318.51, 1567.98, 2093.00, 2637.02];
     function plinkoWin(tier){
-      if(tier <= 0){
-        cashRun(0.2, 0.06, false); // knapper Push: kurz, leise, kein "Ching"
-        return;
-      }
-      var dur = 1.1; // = Dauer der Kontostand-Anzeige
-      var peak = Math.min(0.2, 0.09 + tier * 0.014);
-      cashRun(dur, peak, true);
+      // Der Geld-Klingeln-Teil kommt aus cashWin(); hier nur die
+      // Zusatz-Effekte fuer grosse Treffer.
+      if(tier <= 0) return;
+      var dur = 1.1;
       if(tier >= 4){
-        for(var c=0;c<tier;c++){ tone(2700 + sfxRand()*1900, 0.2 + c * 0.07, 0.09, "sine", 0.05); }
+        for(var c=0;c<tier;c++){ tone(2400 + sfxRand()*1700, 0.2 + c * 0.07, 0.09, "sine", 0.05); }
       }
       if(tier >= 5){ tone(90, 0, 0.28, "sine", 0.15, 60); }
-      if(tier >= 7){ tone(3100, dur + 0.05, 0.55, "sine", 0.1); tone(3700, dur + 0.1, 0.6, "sine", 0.08); }
+      if(tier >= 7){ tone(2800, dur + 0.05, 0.55, "sine", 0.1); tone(3300, dur + 0.1, 0.6, "sine", 0.08); }
     }
     function tileSafe(){
       // small, satisfying "ding" for a single correctly-picked mines tile
@@ -1854,7 +1867,7 @@
     }
     function setMuted(v){ muted = !!v; try{ localStorage.setItem("ztm-muted", muted?"1":"0"); }catch(e){} }
     function isMuted(){ return muted; }
-    return { toss:toss, tension:tension, land:land, peg:peg, win:win, plinkoWin:plinkoWin, tileSafe:tileSafe, deal:deal, lose:lose, gunshot:gunshot, blankShot:blankShot, explosion:explosion, glassBreak:glassBreak, stockTick:stockTick, cylinderSpin:cylinderSpin, gameOver:gameOver, setMuted:setMuted, isMuted:isMuted };
+    return { toss:toss, tension:tension, land:land, peg:peg, win:win, cashWin:cashWin, cashPlan:cashPlan, plinkoWin:plinkoWin, tileSafe:tileSafe, deal:deal, lose:lose, gunshot:gunshot, blankShot:blankShot, explosion:explosion, glassBreak:glassBreak, stockTick:stockTick, cylinderSpin:cylinderSpin, gameOver:gameOver, setMuted:setMuted, isMuted:isMuted };
   })();
 
   var ICON_SOUND_ON = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
@@ -1872,6 +1885,12 @@
       return;
     }
     if(_numAnim[elId]) cancelAnimationFrame(_numAnim[elId]);
+    // Version 24i: Gewinn auf dem Konto -> Sound skaliert mit dem Betrag, die
+    // Zaehl-Animation dauert so lange wie der Sound.
+    if(elId === "konto-bar-balance" && to - from >= 1 && duration >= 1000){
+      var soundSec = Sfx.cashWin(to - from);
+      duration = Math.max(duration, Math.min(7000, soundSec * 1000 + 250));
+    }
     var start = null;
     el.classList.add("counting");
     function step(ts){
