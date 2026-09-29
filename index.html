@@ -870,7 +870,7 @@
           <span class="goal">Ziel: <b class="mono" id="hub-target" style="color:var(--gold-bright)">$5.000</b> <span aria-hidden="true" style="margin-left:10px;color:var(--text);font-size:20px;">›</span></span>
         </div>
         <div class="bar-track"><div class="bar-fill" id="hub-bar" style="width:0%"></div></div>
-        <div class="progress-note" id="hub-note">$100 von $5.000 auf dem gemeinsamen Konto — alle vier Spiele teilen sich dasselbe Guthaben.</div>
+        <div class="progress-note" id="hub-note">$100 von $5.000 auf dem gemeinsamen Konto — alle sieben Spiele teilen sich dasselbe Guthaben.</div>
       </div>
 
       <div class="stat-grid">
@@ -897,11 +897,15 @@
         <div class="rules-body">
           <div>
             <h3>Ziel</h3>
-            <p>Alle vier Spiele teilen sich <b>ein gemeinsames Konto</b>, das bei $100 startet. Bring das gemeinsame Guthaben auf das aktuelle Levelziel — egal in welchem Spiel du das Geld verdienst. Sobald das Ziel erreicht ist, steigt das Level automatisch auf: Das Guthaben bleibt erhalten und es gibt $100 Bonus obendrauf, dazu ein neues, höheres Ziel.</p>
+            <p>Alle sieben Spiele teilen sich <b>ein gemeinsames Konto</b>, das bei $100 startet. Für den Aufstieg in das nächste Level brauchst du <b>beides</b>: das gemeinsame Guthaben muss das Levelziel erreichen, <b>und</b> jedes Spiel muss sein eigenes Etappenziel geschafft haben (die Anzeige „von …“ auf der Spielkachel). Sobald beides erfüllt ist, steigt das Level automatisch auf — das Guthaben bleibt erhalten, es gibt $100 Bonus und ein neues, höheres Ziel.</p>
+          </div>
+          <div>
+            <h3>Etappenziele</h3>
+            <p>In den meisten Spielen füllt sich das Etappenziel mit deinen <b>Gewinnen</b> in diesem Spiel — Verluste ziehen den Fortschritt nicht wieder ab. Beim <b>Russisch Roulette</b> ist es eine Aufgabe: Du musst einmal auf einer bestimmten Risikostufe abdrücken und <b>überleben</b> — Level 1: riskant, Level 2: normal, Level 3: normal, Level 4: riskant, Level 5: ruhig, Level 6: normal. Die geforderte Stufe steht im Spiel und auf der Kachel.</p>
           </div>
           <div>
             <h3>Permadeath</h3>
-            <p>Fällt das gemeinsame Guthaben auf $0, ist der komplette Lauf vorbei — Level und Guthaben gehen zurück auf Anfang ($100, Level 1). Perk-Punkte, gekaufte Perks (inkl. Talismane) und die Lifetime-Statistiken bleiben dabei erhalten. Das Sicherheitsnetz-Perk rettet dich davor — die Rettungssumme wächst mit deinem Level, und im letzten Level hast du sogar zwei Rettungen statt einer.</p>
+            <p>Fällt das gemeinsame Guthaben auf $0, ist der komplette Lauf vorbei — Level und Guthaben gehen zurück auf Anfang ($100, Level 1). Ein <b>Treffer beim Russisch Roulette</b> und ein <b>Totalverlust bei Stocks</b> (die Position ist komplett wertlos) beenden den Lauf sofort — auch wenn noch Guthaben da wäre, und ohne Rettung durch Sicherheitsnetz oder Glückssträhne. Perk-Punkte, gekaufte Perks (inkl. Talismane) und die Lifetime-Statistiken bleiben erhalten. Das Sicherheitsnetz-Perk rettet dich vor dem Fall auf $0 — die Rettungssumme wächst mit deinem Level, und im letzten Level hast du sogar zwei Rettungen statt einer.</p>
           </div>
           <div>
             <h3>Wie man Geld verdient</h3>
@@ -909,9 +913,10 @@
               <li><b>Minenfeld:</b> Felder aufdecken erhöht den Multiplikator auf deinen Einsatz, jederzeit auszahlbar — eine Bombe beendet die Runde und der Einsatz ist weg.</li>
               <li><b>Münzwurf:</b> Kopf oder Zahl tippen — richtig getippt zahlt genau das Doppelte des Einsatzes.</li>
               <li><b>Blackjack:</b> Näher an 21 als der Dealer, ohne drüber zu gehen — Blackjack (Ass + Bild-/10er-Karte) zahlt 3:2.</li>
-              <li><b>Plinko:</b> Ball-Kosten wählen und fallen lassen — je weiter außen der Ball landet, desto höher der Multiplikator auf die Ball-Kosten.</li>
-              <li><b>Russisch Roulette:</b> Risikostufe wählen (1/3/5 von 6 Kammern geladen) und einmal abdrücken — leere Kammer zahlt nach Risiko gestaffelt aus, geladene Kammer kostet den Einsatz.</li>
-              <li><b>Poker:</b> 2 Hole Cards + 5 Gemeinschaftskarten, kein Gegner — deine beste 5-Karten-Hand zahlt nach fester Tabelle (ab Drilling aufwärts), optional zusätzlich eine Nebenwette auf eine ganz bestimmte Hand-Kombination.</li>
+              <li><b>Plinko:</b> Ball-Kosten wählen und fallen lassen — je weiter außen der Ball landet, desto höher der Multiplikator auf die Ball-Kosten. Mehrere Bälle können gleichzeitig fallen.</li>
+              <li><b>Russisch Roulette:</b> Risikostufe wählen (1/3/5 von 6 Kammern geladen) und einmal abdrücken — leere Kammer zahlt nach Risiko gestaffelt aus, geladene Kammer beendet den Lauf.</li>
+              <li><b>Poker:</b> 2 Hole Cards + 5 Gemeinschaftskarten, kein Gegner — deine beste 5-Karten-Hand zahlt nach fester Tabelle (ab Drilling aufwärts). Optional gibt es eine Nebenwette auf eine bestimmte Hand-Kombination und eine Nebenwette „Dealer schlagen“.</li>
+              <li><b>Stocks:</b> Der Kurs bewegt sich alle 2 Sekunden extrem und unvorhersehbar. Du kaufst Shares für $10 bis $100 (mehrere stapelbar) und verkaufst immer die gesamte Position auf einmal. Nur Long — es gibt kein Shorten. Fällt der Kurs nur teilweise, verlierst du nur die Differenz; ist die Position komplett wertlos, ist Game Over. Stop-Loss und Take-Profit sind Teil des Stocks-Talismans.</li>
             </ul>
           </div>
           <div>
@@ -1493,7 +1498,7 @@
   // text ist deshalb hier leer und wird in renderPerks() live gebaut.
   var PERKS = {
     safetyNet: { name:"Sicherheitsnetz", cost:SAFETY_NET_COST, desc:"" },
-    streak:    { name:"Glückssträhne",   cost:STREAK_PERK_COST, desc:"Je länger deine aktuelle Gewinnserie über alle vier Spiele hinweg, desto größer die Chance, dass eine Verlustrunde stattdessen zum Unentschieden wird (Einsatz zurück) — +5% pro Gewinn in Folge, gedeckelt bei 50%. Ein echter Verlust setzt die Serie zurück auf 0." }
+    streak:    { name:"Glückssträhne",   cost:STREAK_PERK_COST, desc:"Je länger deine aktuelle Gewinnserie über alle Spiele hinweg, desto größer die Chance, dass eine Verlustrunde stattdessen zum Unentschieden wird (Einsatz zurück) — +5% pro Gewinn in Folge, gedeckelt bei 50%. Ein echter Verlust setzt die Serie zurück auf 0." }
     // Glücksbringer wurde auf Wunsch entfernt: das Minenfeld läuft jetzt
     // immer mit dem normalen 3%-Hausvorteil.
     // Kategorie-Eliminator wurde entfernt: mit dem gemeinsamen Konto gibt es
@@ -1511,7 +1516,7 @@
       perksOwned:{ safetyNet:false, streak:false, talisman:{ mines:false, coinflip:false, blackjack:false, plinko:false, roulette:false, poker:false, stocks:false } },
       stats:{ busts:0, totalWon:0, totalLost:0, bestBalance:100 },
       safetyNetSavesUsed:0, // Sicherheitsnetz-Perk: verbrauchte Rettungen in diesem Lauf (Obergrenze siehe safetyNetMaxSaves())
-      winStreak:0, // aufeinanderfolgende Gewinnrunden über alle vier Spiele hinweg (für den Glückssträhne-Perk)
+      winStreak:0, // aufeinanderfolgende Gewinnrunden über alle Spiele hinweg (für den Glückssträhne-Perk)
       alwaysMaxBet:false, // "MAX"-Schalter im Header: immer automatisch den maximal möglichen Einsatz voreinstellen
       // Pro-Spiel-Etappenziel (Version 20, seit Version 21 auch für Stocks):
       // Brutto-Gewinn pro Spiel seit Levelstart, initial überall bei 0 -
@@ -2137,7 +2142,7 @@
     } else if(STATE.level >= BONUS_LEVEL_INDEX){
       $("hub-note").textContent = "🎉 Geheime Bonusstufe freigeschaltet — " + fmt(STATE.balance) + " von " + fmt(STATE.target) + ".";
     } else {
-      $("hub-note").textContent = fmt(STATE.balance) + " von " + fmt(STATE.target) + " auf dem gemeinsamen Konto — alle sechs Spiele teilen sich dasselbe Guthaben.";
+      $("hub-note").textContent = fmt(STATE.balance) + " von " + fmt(STATE.target) + " auf dem gemeinsamen Konto — alle sieben Spiele teilen sich dasselbe Guthaben.";
     }
     renderGameGrid();
     renderStats();
