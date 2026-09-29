@@ -4176,6 +4176,10 @@
       var before = stocks.price;
       stocksTick();
       Sfx.stockTick(stocks.price >= before, Math.abs(Math.log10(stocks.price / before)));
+      if(stocks.lots.length > 0 && Math.round(stocksPositionValue(stocks.price)) <= 0){
+        stocksSell("wipeout"); // Totalverlust -> Game Over
+        return;
+      }
       renderStocksChart();
     }, STOCKS_TICK_MS);
   }
@@ -4238,7 +4242,11 @@
     var proceeds = Math.round(stocksPositionValue(stocks.price));
     var profit = proceeds - costBasis;
     var streakSaved = false;
-    if(profit < 0 && rollStreakSave()){
+    // Version 24h: Totalverlust (Position wertlos, das Geld ist komplett weg)
+    // = sofort Game Over - wie beim Russisch Roulette weder Sicherheitsnetz
+    // noch Gluecksstraehne. Ein Teilverlust (z.B. 100 -> 70) bleibt normal.
+    var wipeout = costBasis > 0 && proceeds <= 0;
+    if(!wipeout && profit < 0 && rollStreakSave()){
       proceeds = costBasis; // Einsatz zurück - die Gewinnserie hat den Verlust abgefedert
       profit = 0;
       streakSaved = true;
@@ -4270,11 +4278,18 @@
     var msg;
     if(reason === "stoploss") msg = "Stop-Loss ausgelöst bei " + fmtStockPrice(stocks.price) + ": ";
     else if(reason === "takeprofit") msg = "Take-Profit ausgelöst bei " + fmtStockPrice(stocks.price) + ": ";
+    else if(wipeout) msg = "Totalverlust bei " + fmtStockPrice(stocks.price) + " — die Position ist wertlos: ";
     else msg = "Position verkauft bei " + fmtStockPrice(stocks.price) + ": ";
     msg += (profit >= 0 ? "+" + fmt(profit) : fmt(profit)) + ".";
     var kind = profit > 0 ? "win" : (profit < 0 ? "lose" : "info");
 
-    if(newBalance <= 0 && profit < 0){
+    if(wipeout){
+      STATE.stats.busts += 1;
+      plinko.runGen++; // beendet den Lauf, wie applyBust() im Game-Over-Fall
+      saveLocal();
+      wentToGameOver = true;
+      kind = "lose";
+    } else if(newBalance <= 0 && profit < 0){
       var outcome = applyBust();
       newBalance = STATE.balance;
       if(outcome === "saved"){
