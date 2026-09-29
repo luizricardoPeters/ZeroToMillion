@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 90 84">
+  <defs>
+    <linearGradient id="cardFace" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FBF0D2"/><stop offset="1" stop-color="#DCC48C"/></linearGradient>
+    <linearGradient id="cardFaceBack" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E8D6A8"/><stop offset="1" stop-color="#B9A067"/></linearGradient>
+    <filter id="sh" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#000" flood-opacity="0.55"/></filter>
+    <path id="spade" d="M0 -6 C 5 -1 7 2 7 4.5 A3.5 3.5 0 0 1 1 6 L2 9.5 H-2 L-1 6 A3.5 3.5 0 0 1 -7 4.5 C -7 2 -5 -1 0 -6Z"/>
+  </defs>
+  <!-- hintere Karte (J) -->
+  <g transform="translate(35 40) rotate(-9)" filter="url(#sh)">
+    <rect x="-22" y="-31" width="44" height="62" rx="4.5" fill="url(#cardFaceBack)" stroke="#a58a4f" stroke-width="0.8"/>
+    <text x="-17" y="-18" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="12" fill="#1a1409">J</text>
+    <use href="#spade" transform="translate(-13 -9) scale(0.5)" fill="#1a1409"/>
+  </g>
+  <!-- vordere Karte (A) -->
+  <g transform="translate(53 46) rotate(8)" filter="url(#sh)">
+    <rect x="-22" y="-31" width="44" height="62" rx="4.5" fill="url(#cardFace)" stroke="#b89a5c" stroke-width="0.8"/>
+    <text x="-17" y="-18" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="12" fill="#1a1409">A</text>
+    <use href="#spade" transform="translate(-13 -9) scale(0.5)" fill="#1a1409"/>
+    <use href="#spade" transform="translate(2 6) scale(1.9)" fill="#1a1409"/>
+    <g transform="rotate(180)"><text x="-17" y="-18" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="12" fill="#1a1409">A</text><use href="#spade" transform="translate(-13 -9) scale(0.5)" fill="#1a1409"/></g>
+  </g>
+</svg>

@@ -1,0 +1,16 @@
+{
+  "name": "Zero to Million",
+  "short_name": "Zero to Million",
+  "description": "Roguelike-Gamble-Prototyp",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#070705",
+  "theme_color": "#070705",
+  "lang": "de",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
