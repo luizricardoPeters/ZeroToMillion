@@ -810,6 +810,17 @@
   #view-poker .card .suit{ font-size:23px; margin-top:4px; }
   #view-poker .card.hidden::after{ font-size:20px; }
   #view-poker .card-row{ gap:6px; min-height:92px; flex-wrap:nowrap; }
+  /* Version 24k: Perk-Auswahl nach Level-Aufstieg */
+  .perk-choice-card{ gap:10px; padding:26px 18px 20px; }
+  .perk-choice-title{ font-size:26px; letter-spacing:0.08em; background:var(--gold-grad); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; color:transparent; text-shadow:none; }
+  .perk-choice-list{ display:flex; flex-direction:column; gap:10px; width:100%; margin-top:4px; }
+  .perk-choice-btn{ width:100%; text-align:left; display:flex; flex-direction:column; gap:6px; padding:12px 14px; border-radius:14px;
+    background:linear-gradient(180deg,#1b150e,#100d09); border:1px solid #6b4b21; color:var(--text); font-family:inherit; cursor:pointer; }
+  .perk-choice-btn:active{ border-color:var(--gold-bright); background:linear-gradient(180deg,#241b0f,#15100a); }
+  .perk-choice-btn .pc-top{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; }
+  .perk-choice-btn .pc-name{ font-size:16px; font-weight:800; color:var(--gold-bright); }
+  .perk-choice-btn .pc-tag{ font-size:10px; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-faint); }
+  .perk-choice-btn .pc-desc{ font-size:12.5px; line-height:1.45; color:var(--text-dim); }
   [hidden]{ display:none !important; }
 </style>
 <style>
@@ -901,7 +912,7 @@
           </div>
           <div>
             <h3>Etappenziele</h3>
-            <p>In den meisten Spielen füllt sich das Etappenziel mit deinen <b>Gewinnen</b> in diesem Spiel — Verluste ziehen den Fortschritt nicht wieder ab. Beim <b>Russisch Roulette</b> ist es eine Aufgabe: Du musst einmal auf einer bestimmten Risikostufe abdrücken und <b>überleben</b> — Level 1: riskant, Level 2: normal, Level 3: normal, Level 4: riskant, Level 5: ruhig, Level 6: normal. Die geforderte Stufe steht im Spiel und auf der Kachel.</p>
+            <p>Jedes Spiel hat pro Level ein eigenes Etappenziel in Dollar (die Anzeige „von …“ auf der Kachel). Es füllt sich mit deinen <b>Gewinnen</b> in diesem Spiel — Verluste ziehen den Fortschritt nicht wieder ab. Das gilt für alle sieben Spiele gleich, auch für Russisch Roulette.</p>
           </div>
           <div>
             <h3>Permadeath</h3>
@@ -921,7 +932,7 @@
           </div>
           <div>
             <h3>Perks</h3>
-            <p>Jeder Gewinn bringt Perk-Punkte (♦), eine Zielerreichung +50 auf einmal. Im Perk-Shop lassen sie sich in dauerhafte Vorteile eintauschen — außerdem gibt es für jedes Spiel einen eigenen Talisman (fester Preis pro Spiel), der die Auszahlung um +25% pro aktuellem Level erhöht, ohne die Gewinnchancen zu verändern. Die Glückssträhne belohnt eine laufende Gewinnserie über alle Spiele hinweg mit einer wachsenden Chance, dass eine Verlustrunde stattdessen zum Unentschieden wird. Perk-Punkte und gekaufte Perks überleben einen Bust.</p>
+            <p><b>Nach jedem geschafften Level wählst du einen von drei zufälligen Perks.</b> Zur Auswahl stehen Perks, die du noch nicht hast, sowie Geldspritzen oder Perk-Punkte. Jeder Gewinn bringt Perk-Punkte (♦), eine Zielerreichung +50 auf einmal. Im Perk-Shop lassen sie sich in dauerhafte Vorteile eintauschen — außerdem gibt es für jedes Spiel einen eigenen Talisman (fester Preis pro Spiel), der die Auszahlung um +25% pro aktuellem Level erhöht, ohne die Gewinnchancen zu verändern. Die Glückssträhne belohnt eine laufende Gewinnserie über alle Spiele hinweg mit einer wachsenden Chance, dass eine Verlustrunde stattdessen zum Unentschieden wird. Perk-Punkte und gekaufte Perks überleben einen Bust.</p>
           </div>
           <div>
             <h3>"MAX"-Schalter (oben neben dem Ton-Symbol)</h3>
@@ -1169,10 +1180,10 @@
       <div class="balance-display">
         <div>
           <div class="fortschritt-label">Fortschritt</div>
-          <div class="amt" id="roulette-balance">Offen</div>
+          <div class="amt mono" id="roulette-balance">$100</div>
         </div>
         <div class="round-banner" id="roulette-banner"></div>
-        <div class="goal-mini">Ziel<br><b id="roulette-target" style="font-size:13px;display:inline-block;max-width:120px">auf „riskant“ überleben</b></div>
+        <div class="goal-mini">Ziel<br><b class="mono" id="roulette-target">$5.000</b></div>
       </div>
 
       <div class="revolver-stage" id="revolver-stage">
@@ -1412,6 +1423,14 @@
   </div>
 </div>
 
+<div class="overlay" id="perk-choice-overlay" hidden>
+  <div class="overlay-card perk-choice-card">
+    <div class="overlay-title perk-choice-title">NEUER PERK</div>
+    <div class="overlay-sub" id="perk-choice-sub">Wähle einen von drei Perks.</div>
+    <div class="perk-choice-list" id="perk-choice-list"></div>
+  </div>
+</div>
+
 <script>
 (function(){
   "use strict";
@@ -1459,17 +1478,11 @@
   // (geladene Kammern von 6) abdruecken UND ueberleben. Reihenfolge = Level
   // 1..6 und die geheime Bonusstufe: riskant, normal, normal, riskant,
   // ruhig, normal, riskant. Fortschritt ist dafuer 0 (offen) oder 1 (geschafft).
-  var ROULETTE_REQUIRED_LOADED = [5, 3, 3, 5, 1, 3, 5];
-  var ROULETTE_RISK_NAMES = { 1:"ruhig", 3:"normal", 5:"riskant" };
-  function rouletteRequiredLoaded(level){
-    return ROULETTE_REQUIRED_LOADED[clamp(level - 1, 0, ROULETTE_REQUIRED_LOADED.length - 1)];
-  }
-  function rouletteRequiredName(level){ return ROULETTE_RISK_NAMES[rouletteRequiredLoaded(level)]; }
+  // (Version 24k: die Roulette-Ueberlebensaufgabe aus 24f ist wieder
+  // aufgeloest - Roulette hat jetzt dasselbe Dollar-Etappenziel wie die
+  // anderen Spiele.)
   function gameTarget(gameId){
-    return gameId === "roulette" ? 1 : perGameLevelTarget(STATE.level);
-  }
-  function recordRouletteSurvival(loaded){
-    if(loaded === rouletteRequiredLoaded(STATE.level)) STATE.gameProgress.roulette = 1;
+    return perGameLevelTarget(STATE.level);
   }
   function recordGameProgress(gameId, profit){
     if(profit <= 0) return;
@@ -1522,7 +1535,7 @@
       // Brutto-Gewinn pro Spiel seit Levelstart, initial überall bei 0 -
       // siehe recordGameProgress/allGamesReady weiter oben.
       gameProgress:{ mines:0, coinflip:0, blackjack:0, plinko:0, roulette:0, poker:0, stocks:0 },
-      rouletteRuleV2:true
+      perkChoice:null // offene Perk-Auswahl nach einem Level-Aufstieg (3 Optionen) oder null
     };
   }
 
@@ -1583,9 +1596,9 @@
       var v = Number(savedGameProgress[id]);
       mergedGameProgress[id] = isFinite(v) && v > 0 ? v : 0;
     });
-    // Roulette-Fortschritt ist seit Version 24f 0/1 statt Dollar - ein alter
-    // Spielstand (ohne rouletteRuleV2) startet dort wieder bei 0.
-    mergedGameProgress.roulette = (s.rouletteRuleV2 && mergedGameProgress.roulette >= 1) ? 1 : 0;
+    // Roulette-Fortschritt war in Version 24f kurz 0/1 (Ueberlebensaufgabe);
+    // ein Spielstand mit diesem Flag startet wieder bei 0 in Dollar.
+    if(s.rouletteRuleV2) mergedGameProgress.roulette = 0;
     return {
       level: s.level || d.level,
       target: s.target || d.target,
@@ -1600,7 +1613,7 @@
       winStreak: s.winStreak || 0,
       alwaysMaxBet: !!s.alwaysMaxBet,
       gameProgress: mergedGameProgress,
-      rouletteRuleV2: true
+      perkChoice: mergePerkChoice(s.perkChoice)
     };
   }
 
@@ -2172,12 +2185,6 @@
   // zeigt die Kachel stattdessen einen grünen Haken - das Level steigt aber
   // erst auf, wenn ZUSÄTZLICH auch das gemeinsame Kontoziel erreicht ist.
   function renderStageProgressBar(gameId){
-    if(gameId === "roulette"){
-      return '<div class="stage-wrap">' +
-               '<div class="stage-label">Überlebe auf „'+rouletteRequiredName(STATE.level)+'“</div>' +
-               '<div class="stage-progress"><div class="stage-progress-fill" style="width:0%"></div></div>' +
-             '</div>';
-    }
     var target = perGameLevelTarget(STATE.level);
     var have = STATE.gameProgress[gameId] || 0;
     var pct = target > 0 ? Math.min(100, Math.round((have / target) * 100)) : 100;
@@ -2266,6 +2273,94 @@
   // die letzten Spiele nachgezogen haben.
   // targetAchieved verhindert, dass das +50-Punkte/+100-Bonus-Paket mehrfach
   // ausgezahlt wird, falls das Guthaben nach dem Erreichen wieder schwankt.
+  // ---------------- Perk-Auswahl nach jedem Level (Version 24k) ----------------
+  // Nach jedem Level-Aufstieg werden 3 zufaellige Optionen angeboten, eine
+  // davon darf gewaehlt werden. Optionen: noch nicht besessene Perks
+  // (Sicherheitsnetz, Gluecksstraehne, Talismane) - dauerhaft wie im Shop -
+  // plus drei Fueller (kleine/grosse Geldspritze, Perk-Punkte), damit es immer 3 gibt.
+  // Eigener Zufallsgenerator, damit Math.random() den Spielausgaengen
+  // vorbehalten bleibt.
+  var _perkSeed = (Date.now() % 2147483647) || 7;
+  function perkRand(){ _perkSeed = (_perkSeed * 1103515245 + 12345) % 2147483648; return _perkSeed / 2147483648; }
+  function perkOptionPool(){
+    var pool = [];
+    if(!STATE.perksOwned.safetyNet) pool.push({ kind:"perk", key:"safetyNet" });
+    if(!STATE.perksOwned.streak) pool.push({ kind:"perk", key:"streak" });
+    LIVE_GAME_IDS.forEach(function(id){
+      if(!(STATE.perksOwned.talisman && STATE.perksOwned.talisman[id])) pool.push({ kind:"talisman", key:id });
+    });
+    pool.push({ kind:"cash", key:"small", amount: Math.max(100, Math.round(STATE.target * 0.03 / 100) * 100) });
+    pool.push({ kind:"cash", key:"big", amount: Math.max(200, Math.round(STATE.target * 0.08 / 100) * 100) });
+    pool.push({ kind:"points", amount: 100 });
+    return pool;
+  }
+  function rollPerkChoices(){
+    var pool = perkOptionPool();
+    for(var i = pool.length - 1; i > 0; i--){
+      var j = Math.floor(perkRand() * (i + 1));
+      var t = pool[i]; pool[i] = pool[j]; pool[j] = t;
+    }
+    return pool.slice(0, 3);
+  }
+  function mergePerkChoice(v){
+    if(!Array.isArray(v) || v.length !== 3) return null;
+    var ok = v.every(function(o){ return o && typeof o.kind === "string"; });
+    return ok ? v : null;
+  }
+  function perkOptionInfo(o){
+    if(o.kind === "perk"){
+      return { name: PERKS[o.key].name, desc: o.key === "safetyNet" ? safetyNetDesc() : PERKS[o.key].desc, tag:"Perk" };
+    }
+    if(o.kind === "talisman"){
+      return { name: "Talisman: " + GAME_LABELS[o.key], tag:"Perk",
+        desc: o.key === "stocks"
+          ? "Schaltet bei Stocks Stop-Loss und Take-Profit frei (automatischer Verkauf bei einem Kurs deiner Wahl)."
+          : "Erhöht die Auszahlung bei " + GAME_LABELS[o.key] + " um +25% pro aktuellem Level, die Gewinnchancen bleiben gleich." };
+    }
+    if(o.kind === "cash") return { name: o.key === "big" ? "Große Geldspritze" : "Kleine Geldspritze", tag:"Sofort", desc:"+" + fmt(o.amount) + " direkt aufs Konto." };
+    return { name:"Perk-Punkte", tag:"Sofort", desc:"+" + o.amount + " ♦ für den Perk-Shop." };
+  }
+  function applyPerkOption(o){
+    if(o.kind === "perk"){ STATE.perksOwned[o.key] = true; }
+    else if(o.kind === "talisman"){
+      if(!STATE.perksOwned.talisman) STATE.perksOwned.talisman = {};
+      STATE.perksOwned.talisman[o.key] = true;
+    } else if(o.kind === "cash"){ STATE.balance += o.amount; trackBestBalance(); }
+    else if(o.kind === "points"){ grantPoints(o.amount); }
+  }
+  function choosePerk(idx){
+    var list = STATE.perkChoice;
+    if(!list || !list[idx]) return;
+    var before = STATE.balance;
+    var o = list[idx];
+    STATE.perkChoice = null;
+    applyPerkOption(o);
+    saveLocal();
+    var ov = $("perk-choice-overlay"); if(ov) ov.hidden = true;
+    renderHeader();
+    renderHub();
+    if(STATE.balance > before) animateNumber("konto-bar-balance", before, STATE.balance, 1100);
+  }
+  function maybeShowPerkChoice(){
+    if(!STATE.perkChoice) return;
+    var go = $("game-over-overlay");
+    if(go && !go.hidden) return;
+    var ov = $("perk-choice-overlay");
+    if(!ov) return;
+    var box = $("perk-choice-list");
+    box.innerHTML = "";
+    $("perk-choice-sub").textContent = "Level " + (STATE.level - 1) + " geschafft — wähle einen von drei Perks.";
+    STATE.perkChoice.forEach(function(o, idx){
+      var info = perkOptionInfo(o);
+      var b = document.createElement("button");
+      b.className = "perk-choice-btn";
+      b.innerHTML = '<span class="pc-top"><span class="pc-name">' + info.name + '</span><span class="pc-tag">' + info.tag + '</span></span><span class="pc-desc">' + info.desc + '</span>';
+      b.addEventListener("click", function(){ choosePerk(idx); });
+      box.appendChild(b);
+    });
+    ov.hidden = false;
+  }
+
   function checkLevelUp(){
     if(STATE.targetAchieved) return false;
     if(STATE.balance >= STATE.target && allGamesReady()){
@@ -2277,6 +2372,8 @@
         STATE.balance += 100; // fester Bonus beim Aufstieg (ersetzt die alten vier separaten 100$-Starts)
         STATE.targetAchieved = false; // frisches Ziel im neuen Level
         resetGameProgress(); // frisches Pro-Spiel-Etappenziel im neuen Level
+        STATE.perkChoice = rollPerkChoices();
+        if(typeof setTimeout === "function") setTimeout(maybeShowPerkChoice, 1800);
       }
       return true;
     }
@@ -2307,6 +2404,7 @@
     STATE.targetAchieved = false;
     STATE.safetyNetSavesUsed = 0;
     STATE.winStreak = 0;
+    STATE.perkChoice = null;
     resetGameProgress(); // Pro-Spiel-Etappenziel wieder bei 0, wie bei jedem Neustart
     plinko.runGen++;
     resetStocksRound();
@@ -2334,6 +2432,7 @@
   function dismissGameOver(){
     resetRun();
     $("game-over-overlay").hidden = true;
+    var pco = $("perk-choice-overlay"); if(pco) pco.hidden = true;
     renderHeader();
     renderHub();
     showView("hub");
@@ -3447,14 +3546,10 @@
     setRouletteControlsDisabled(false);
     updateRouletteLive();
   }
-  function renderRouletteGoal(){
-    var done = (STATE.gameProgress.roulette || 0) >= 1;
-    $("roulette-balance").textContent = done ? "Geschafft ✓" : "Offen";
-    $("roulette-target").textContent = "auf „" + rouletteRequiredName(STATE.level) + "“ überleben";
-  }
   function renderRoulette(){
     $("konto-bar-balance").textContent = fmt(STATE.balance);
-    renderRouletteGoal();
+    $("roulette-balance").textContent = fmt(STATE.gameProgress.roulette || 0);
+    $("roulette-target").textContent = fmt(perGameLevelTarget(STATE.level));
     syncBetInput("roulette-bet", "#view-roulette .quick-bets", STATE.balance);
     updateRouletteLive();
   }
@@ -3568,13 +3663,16 @@
     roulette.pending = null;
     var beforeResolve = Math.round(STATE.balance);
     var newBalance;
+    var rouletteProgressBefore = STATE.gameProgress.roulette || 0;
+    var rouletteProgressAfterWin = rouletteProgressBefore;
     if(survived){
       var mult = rouletteMultiplier(loaded);
       var payout = Math.round(bet * mult);
       newBalance = beforeResolve + payout;
       STATE.balance = newBalance;
       recordWin(payout - bet);
-      recordRouletteSurvival(loaded);
+      recordGameProgress("roulette", payout - bet);
+      rouletteProgressAfterWin = STATE.gameProgress.roulette;
       grantPoints(1);
       var justAchieved = checkLevelUp();
       newBalance = STATE.balance;
@@ -3605,7 +3703,8 @@
     renderHeader();
     renderHub();
     animateNumber("konto-bar-balance", beforeResolve, newBalance, survived ? 1100 : 300);
-    renderRouletteGoal();
+    animateNumber("roulette-balance", rouletteProgressBefore, rouletteProgressAfterWin, 1100);
+    $("roulette-target").textContent = fmt(perGameLevelTarget(STATE.level));
     syncBetInput("roulette-bet", "#view-roulette .quick-bets", STATE.balance);
     if(!survived){
       setTimeout(function(){
@@ -4856,6 +4955,8 @@
     // catch that here.
     if(STATE.balance <= 0){
       showGameOver();
+    } else {
+      maybeShowPerkChoice();
     }
   }
 
@@ -4887,7 +4988,6 @@
     openGame: openGame,
     getMines: function(){ return mines; },
     getCf: function(){ return cf; },
-    checkLevelUp: checkLevelUp,
     applyBust: applyBust,
     resetRun: resetRun,
     mineStartRound: mineStartRound,
@@ -4965,8 +5065,10 @@
     PER_GAME_LEVEL_TARGETS: PER_GAME_LEVEL_TARGETS,
     perGameLevelTarget: perGameLevelTarget,
     recordGameProgress: recordGameProgress,
-    recordRouletteSurvival: recordRouletteSurvival,
-    rouletteRequiredLoaded: rouletteRequiredLoaded,
+    rollPerkChoices: rollPerkChoices,
+    perkOptionPool: perkOptionPool,
+    choosePerk: choosePerk,
+    checkLevelUp: checkLevelUp,
     gameTarget: gameTarget,
     gameProgressDone: gameProgressDone,
     allGamesReady: allGamesReady,
